@@ -52,12 +52,10 @@ export default function ResumeAnalysis({ jdProfile, onRewriteReady, disabled }: 
     }
   }
 
-  const handleAnswer = (index: number, answer: string) => {
-    const match = matchResults[index]
-    const question = match.question
-    if (!question) return
+  const handleAnswer = (question: string, answer: string) => {
     setFollowUpAnswers(prev => {
       const filtered = prev.filter(a => a.question !== question)
+      if (!answer.trim()) return filtered
       return [...filtered, { question, answer }]
     })
   }
@@ -100,17 +98,17 @@ export default function ResumeAnalysis({ jdProfile, onRewriteReady, disabled }: 
 上海交通大学 金融学 本科在读
 
 实习经历：
-• 某外资银行市场部实习（2024.06-2024.08）
+- 某外资银行市场部实习（2024.06-2024.08）
   - 协助策划季度客户活动，参与 50+ 高净值客户活动现场执行
   - 整理会议纪要，制作每日市场简报
 
 校园经历：
-• 商学院学生会外联部干事
+- 商学院学生会外联部干事
   - 策划并执行 3 场企业参访活动，累计参与 200+ 人次
   - 负责活动宣传文案撰写，微信公众号阅读量平均 800+
 
 项目经历：
-• 课程项目：某消费品品牌营销方案策划（2024.03）
+- 课程项目：某消费品品牌营销方案策划（2024.03）
   - 作为组长带领 5 人小组完成报告
   - 负责竞品分析和定价策略"
         value={resumeText}
@@ -188,23 +186,34 @@ export default function ResumeAnalysis({ jdProfile, onRewriteReady, disabled }: 
                   </div>
                 </div>
 
-                {/* Follow-up question */}
-                {match.status === 'weak' && match.question && (
-                  <div className="mt-3 p-3 rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                    <p className="text-sm font-medium mb-2" style={{ color: 'var(--accent)' }}>
-                      💬 追问：{match.question}
-                    </p>
-                    <textarea
-                      className="textarea-warm text-sm"
-                      style={{ minHeight: '80px' }}
-                      placeholder="在这里输入你的回答..."
-                      onChange={(e) => handleAnswer(i, e.target.value)}
-                    />
-                    {followUpAnswers.find(a => a.question === match.question) && (
-                      <p className="text-xs mt-2" style={{ color: 'var(--sufficient)' }}>
-                        ✓ 已收到回答
-                      </p>
-                    )}
+                {/* Follow-up questions: weak 或"可能有但没写"的 missing */}
+                {match.questions && match.questions.length > 0 && (
+                  <div className="mt-3 space-y-3">
+                    {match.questions.map((q, qi) => (
+                      <div key={qi} className="p-3 rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                        <p className="text-sm font-medium mb-2" style={{ color: 'var(--accent)' }}>
+                          💬 追问：{q}
+                        </p>
+                        <textarea
+                          className="textarea-warm text-sm"
+                          style={{ minHeight: '72px' }}
+                          placeholder="如实回答即可，没有也没关系～"
+                          onChange={(e) => handleAnswer(q, e.target.value)}
+                        />
+                        {followUpAnswers.find(a => a.question === q) && (
+                          <p className="text-xs mt-2" style={{ color: 'var(--sufficient)' }}>
+                            ✓ 已收到回答
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 真实缺口：诚实建议，不追问、不编造 */}
+                {match.status === 'missing' && (!match.questions || match.questions.length === 0) && match.gapNote && (
+                  <div className="mt-3 p-3 rounded-lg text-sm" style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--muted)' }}>
+                    📝 {match.gapNote}
                   </div>
                 )}
               </div>
